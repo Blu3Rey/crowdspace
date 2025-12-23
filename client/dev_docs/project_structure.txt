@@ -1,0 +1,12 @@
+├── app/                # If using Expo Router (Routing logic)
+├── src/                # All application logic
+│   ├── assets/         # Images, fonts, icons
+│   ├── components/     # UI Building blocks (divided by 'ui' or 'features')
+│   ├── hooks/          # Custom React hooks
+│   ├── services/       # API calls (Axios/TanStack Query)
+│   ├── store/          # State management (Zustand/Redux)
+│   ├── theme/          # Design tokens and constants
+│   └── utils/          # Helper functions
+├── app.json            # Config (Root)
+├── package.json        # Config (Root)
+└── tsconfig.json       # Config (Root)
