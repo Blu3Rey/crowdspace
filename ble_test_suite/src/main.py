@@ -52,6 +52,6 @@ if __name__ == "__main__":
     logger.info("Configured Program Logger")
 
     # Configure Environment Variables
-    load_dotenv("../env/.env.dev")
+    load_dotenv("../env/.env.example")
 
     main()
