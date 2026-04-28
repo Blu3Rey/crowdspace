@@ -9,13 +9,15 @@ from modules.utils import single_select_input
 
 from peripheral import run_peripheral_mode
 from central import run_central_mode
+from discovery import run_discovery_mode
 
 # Grab a loger named after this specific file (__name__).
 logger = logging.getLogger(f"BLE_Test_Suite.{__name__}")
 
 test_cases = {
     "Host-Mode": run_peripheral_mode,
-    "Join-Mode": run_central_mode
+    "Join-Mode": run_central_mode,
+    "Discovery Mode": run_discovery_mode
 }
 
 def main(argv: list[str] | None = None):

@@ -1,0 +1,1 @@
+Connection btw test_suite Host and app Join works. Vise versa doesnt work.

@@ -25,7 +25,7 @@ async def run_central_mode():
     if not device:
         log.error("Could not find CrowdSpace Host. Is the App in 'Host a Session' mode?")
         return
-    print("MARKER")
+
     log.info(f"Found Host: {device.name or device.address}. Connecting...")
 
     async with BleakClient(device) as client:

@@ -21,7 +21,7 @@ async def run_peripheral_mode():
     if not SERVICE_UUID or not TX_CHAR_UUID or not RX_CHAR_UUID:
         raise ValueError("Environment Variable missing.")
 
-    server = BlessServer(name="BLE_TEST")
+    server = BlessServer(name="BLE_Chat_App")
 
     # Define request handler for RX Characteristic (App -> Script)
     def write_request_handler(characteristic: BlessGATTCharacteristic, value: bytearray):
