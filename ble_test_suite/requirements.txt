@@ -1,0 +1,7 @@
+bleak==3.0.1
+bless==0.3.0
+dbus-fast==4.0.4
+dbus-next==0.2.3
+prompt_toolkit==3.0.52
+python-dotenv==1.2.2
+wcwidth==0.6.0
