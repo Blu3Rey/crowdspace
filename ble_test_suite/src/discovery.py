@@ -14,6 +14,7 @@ async def run_discovery_mode():
         print(f"    Service UUIDs: {adv_data.service_uuids}")
         print(f"    Manufacturer Data: {adv_data.manufacturer_data}")
         print(f"    Tx Power: {adv_data.tx_power}")
+        print(adv_data)
         print("-" * 20)
 
 if __name__ == "__main__":

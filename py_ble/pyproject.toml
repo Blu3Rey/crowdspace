@@ -1,0 +1,18 @@
+[project]
+name = "BLE Messenger"
+version = "0.1.0"
+description = "Bidirectional BLE Peer-to-Peer Chat"
+dependencies = [
+    "bleak==3.0.2",
+    "bless==0.3.0",
+    "dbus-fast==4.0.4",
+    "dbus-next==0.2.3",
+    "markdown-it-py==4.2.0",
+    "mdurl==0.1.2",
+    "Pygments==2.20.0",
+    "rich==15.0.0"
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
