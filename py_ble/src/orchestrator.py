@@ -274,6 +274,10 @@ class BLEMessenger:
         role, peer_addr = await self._negotiate_role()
         self._role = role
 
+        process_task = asyncio.create_task(
+            self._process_incoming(), name="process_incoming"
+        )
+
         # --- peripheral path ------------------------------------
         if role == "peripheral":
             node = PeripheralNode(loop, self._raw_received)
@@ -315,7 +319,7 @@ class BLEMessenger:
 
         # --- Concurrent runtime tasks --------------------------
         bg = [
-            asyncio.create_task(self._process_incoming(), name="process_incoming"),
+            process_task,
             asyncio.create_task(self._ping_loop(), name="ping_loop"),
         ]
 

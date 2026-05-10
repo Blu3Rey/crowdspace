@@ -78,3 +78,13 @@ class CentralNode:
             return True
         except Exception as exc:
             return False
+    
+    async def disconnect(self):
+        self._running = False
+        self._connected = False
+        if self._client and self._client.is_connected:
+            try:
+                await self._client.stop_notify(TX_CHAR)
+                await self._client.disconnect()
+            except Exception:
+                pass
