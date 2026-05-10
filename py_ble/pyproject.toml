@@ -1,7 +1,12 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "BLE Messenger"
+name = "ble-dev"
 version = "0.1.0"
-description = "Bidirectional BLE Peer-to-Peer Chat"
+description = "BLE concept implementations"
+requires-python = ">=3.8"
 dependencies = [
     "bleak==3.0.2",
     "bless==0.3.0",
@@ -13,6 +18,12 @@ dependencies = [
     "rich==15.0.0"
 ]
 
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "mypy>=1.0",
+]
+
+[project.scripts]
+ble-messenger = "ble_chat.main:main"

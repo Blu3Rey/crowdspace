@@ -3,12 +3,12 @@ from typing import Any, Optional
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from ui import ChatUI
-from peripheral import PeripheralNode
-from central import CentralNode
 
-from constants import PING_INTERVAL, CHAT_SERV, SCAN_TIMEOUT
-from protocol import Message, Reassembler, MsgType, build_packets
+from ble_chat.peripheral import PeripheralNode
+from ble_chat.central import CentralNode
+from ble_chat.ui import ChatUI
+from ble_chat.constants import PING_INTERVAL, CHAT_SERV, SCAN_TIMEOUT
+from ble_chat.protocol import Message, Reassembler, MsgType, build_packets
 
 class BLEMessenger:
     """

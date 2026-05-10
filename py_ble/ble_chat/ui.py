@@ -1,4 +1,4 @@
-from constants import MAX_MSG_ID, CHAT_SERV
+from ble_chat.constants import MAX_MSG_ID, CHAT_SERV
 import time
 from dataclasses import dataclass
 from datetime import datetime

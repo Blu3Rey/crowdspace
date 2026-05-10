@@ -2,7 +2,7 @@ import asyncio
 import argparse
 import logging
 
-from orchestrator import BLEMessenger
+from ble_chat.orchestrator import BLEMessenger
 
 
 def main():
