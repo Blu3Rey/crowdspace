@@ -25,5 +25,8 @@ dev = [
     "mypy>=1.0",
 ]
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [project.scripts]
-ble-messenger = "ble_chat.main:main"
+ble-messenger = "features.ble_chat.main:main"

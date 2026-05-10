@@ -2,10 +2,10 @@ import asyncio
 import argparse
 import logging
 
-from ble_chat.orchestrator import BLEMessenger
+from .orchestrator import BLEMessenger
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="BLE Peer-to-Peer Chat — run the same script on two machines",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -23,7 +23,7 @@ Examples:
         "--debug", action="store_true",
         help="Enable verbose BLE stack logging (bleak / bless)"
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
  
     if args.debug:
         logging.basicConfig(

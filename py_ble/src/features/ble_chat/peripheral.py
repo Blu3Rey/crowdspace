@@ -6,7 +6,7 @@ from bless import (
     GATTCharacteristicProperties as Props,
     GATTAttributePermissions as Perms,
 )
-from ble_chat.constants import TX_CHAR, RX_CHAR, CHAT_SERV, INTER_PKT_GAP, DEVICE_NAME
+from .constants import TX_CHAR, RX_CHAR, CHAT_SERV, INTER_PKT_GAP, DEVICE_NAME
 
 class PeripheralNode:
     """

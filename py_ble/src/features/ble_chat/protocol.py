@@ -1,4 +1,4 @@
-from ble_chat.constants import CHUNK_SIZE
+from .constants import CHUNK_SIZE
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field

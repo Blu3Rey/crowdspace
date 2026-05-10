@@ -3,7 +3,7 @@ import asyncio
 from typing import Callable, Optional
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak import BleakClient
-from ble_chat.constants import RX_CHAR, TX_CHAR, INTER_PKT_GAP
+from .constants import RX_CHAR, TX_CHAR, INTER_PKT_GAP
 
 class CentralNode:
     """
