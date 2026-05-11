@@ -9,7 +9,7 @@ import { BleManager, Device, Characteristic, BleError } from 'react-native-ble-p
 import Peripheral, { Permission, Property } from 'react-native-multi-ble-peripheral';
 import { Buffer } from 'buffer';
 
-import { SERVICE_UUID, TX_CHAR_UUID, RX_CHAR_UUID } from '@env';
+import { CHAT_SVC, CHAT_TX_CHAR, CHAT_RX_CHAR } from '@env';
 
 Peripheral.setDeviceName("BLE_Chat_App")
 
@@ -98,20 +98,20 @@ export default function App() {
       peripheralRef.current = p;
 
       p.on('ready', async () => {
-        await p.addService(SERVICE_UUID, true);
+        await p.addService(CHAT_SVC, true);
         
         // TX: Central subscribes here to receive messages from Host
         await p.addCharacteristic(
-          SERVICE_UUID,
-          TX_CHAR_UUID,
+          CHAT_SVC,
+          CHAT_TX_CHAR,
           Property.NOTIFY | Property.READ,
           Permission.READABLE
         );
 
         // RX: Host receives messages here from Central
         await p.addCharacteristic(
-          SERVICE_UUID,
-          RX_CHAR_UUID,
+          CHAT_SVC,
+          CHAT_RX_CHAR,
           Property.WRITE | Property.WRITE_NO_RESPONSE,
           Permission.WRITEABLE
         );
@@ -154,7 +154,7 @@ export default function App() {
 
     if (!bleManagerRef.current) return;
 
-    bleManagerRef.current.startDeviceScan([SERVICE_UUID], null, async (err: BleError | null, device: Device | null) => {
+    bleManagerRef.current.startDeviceScan([CHAT_SVC], null, async (err: BleError | null, device: Device | null) => {
       if (err) return setStatus(`Scan Error: ${err.message}`);
       
       if (device) {
@@ -174,8 +174,8 @@ export default function App() {
 
           // Monitor the Host's TX characteristic
           connected.monitorCharacteristicForService(
-            SERVICE_UUID,
-            TX_CHAR_UUID,
+            CHAT_SVC,
+            CHAT_TX_CHAR,
             (mErr: BleError | null, char: Characteristic | null) => {
               if (mErr) {
                 console.error('Monitor Error:', mErr);
@@ -219,15 +219,15 @@ export default function App() {
       if (role === 'HOST' && peripheralRef.current) {
         // Send to central via Notification
         await peripheralRef.current.updateValue(
-          SERVICE_UUID,
-          TX_CHAR_UUID,
+          CHAT_SVC,
+          CHAT_TX_CHAR,
           Buffer.from(msg)
         );
       } else if (role === 'JOIN' && connectedDeviceRef.current) {
         // Write to peripheral's RX characteristic
         await connectedDeviceRef.current.writeCharacteristicWithResponseForService(
-          SERVICE_UUID,
-          RX_CHAR_UUID,
+          CHAT_SVC,
+          CHAT_RX_CHAR,
           Buffer.from(msg).toString('base64')
         );
       }
@@ -252,7 +252,7 @@ export default function App() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
-          <Text style={styles.title}>BLE Chat (TS)</Text>
+          <Text style={styles.title}>BLE Chat (TS) - {CHAT_SVC}</Text>
           <TouchableOpacity style={styles.button} onPress={startHost}>
             <Text style={styles.btnText}>Host (Peripheral)</Text>
           </TouchableOpacity>
