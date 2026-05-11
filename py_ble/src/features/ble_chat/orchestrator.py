@@ -1,3 +1,4 @@
+import os
 import asyncio
 from typing import Any, Optional
 from bleak import BleakScanner
@@ -7,7 +8,7 @@ from bleak.backends.scanner import AdvertisementData
 from .peripheral import PeripheralNode
 from .central import CentralNode
 from .ui import ChatUI
-from .constants import PING_INTERVAL, CHAT_SERV, SCAN_TIMEOUT
+from .constants import PING_INTERVAL, SCAN_TIMEOUT
 from .protocol import Message, Reassembler, MsgType, build_packets
 
 class BLEMessenger:
@@ -33,8 +34,11 @@ class BLEMessenger:
         Either way _process_incoming sees bytes in the queue.
     """
 
-    def __init__(self, my_name: str):
+    def __init__(self, my_name: str, service_uuid: str, tx_char_uuid: str, rx_char_uuid: str):
         self.my_name = my_name
+        self.service_uuid = service_uuid
+        self.tx_char_uuid = tx_char_uuid
+        self.rx_char_uuid = rx_char_uuid
         self.ui = ChatUI(my_name)
         self._peer_name = "Peer"
         self._peer_addr = "unknown"
@@ -214,7 +218,7 @@ class BLEMessenger:
             if not self._running:
                 return
             
-            node = CentralNode(addr, self._raw_received, self._on_central_disconnect)
+            node = CentralNode(self.tx_char_uuid, self.rx_char_uuid, addr, self._raw_received, self._on_central_disconnect)
             if await node.connect():
                 self._node = node
                 self.ui.system("Reconnected - re-handshaking...", "green")
@@ -243,7 +247,7 @@ class BLEMessenger:
 
         def on_device(device: BLEDevice, adv: AdvertisementData):
             service_uuids = [u.lower() for u in adv.service_uuids]
-            if CHAT_SERV.lower() in service_uuids:
+            if self.service_uuid.lower() in service_uuids:
                 found[device.address] = device
         
         async with BleakScanner(detection_callback=on_device):
@@ -280,7 +284,7 @@ class BLEMessenger:
 
         # --- peripheral path ------------------------------------
         if role == "peripheral":
-            node = PeripheralNode(loop, self._raw_received)
+            node = PeripheralNode(self.service_uuid, self.tx_char_uuid, self.rx_char_uuid, loop, self._raw_received)
             self._node = node
             await node.start()
 
@@ -296,7 +300,7 @@ class BLEMessenger:
         # --- central path ---------------------------------------
         else:
             self._peer_addr = peer_addr
-            node = CentralNode(peer_addr, self._raw_received, self._on_central_disconnect)
+            node = CentralNode(self.tx_char_uuid, self.rx_char_uuid, peer_addr, self._raw_received, self._on_central_disconnect)
             self._node = node
 
             self.ui.system(f"Connecting to {peer_addr}...")

@@ -1,8 +1,8 @@
 
-# Any BLE scanner that finds CHAR_SERV knows it's talking to this app.
-CHAT_SERV   = "bada5500-c0de-cafe-babe-000000000001"
-TX_CHAR     = "bada5500-c0de-cafe-babe-000000000002" # Peripheral -> Central (NOTIFY)
-RX_CHAR     = "bada5500-c0de-cafe-babe-000000000003" # Central -> Peripheral (WRITE)
+# # Any BLE scanner that finds CHAR_SERV knows it's talking to this app.
+# CHAT_SERV   = "bada5500-c0de-cafe-babe-000000000001"
+# TX_CHAR     = "bada5500-c0de-cafe-babe-000000000002" # Peripheral -> Central (NOTIFY)
+# RX_CHAR     = "bada5500-c0de-cafe-babe-000000000003" # Central -> Peripheral (WRITE)
 
 DEVICE_NAME     = "BLE-Messenger"
 SCAN_TIMEOUT    = 6.0   # seconds to scan before deciding to become peripheral

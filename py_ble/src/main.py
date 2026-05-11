@@ -47,12 +47,12 @@ def main(argv: list[str] | None = None):
     # Parse the arguments
     args = parser.parse_args(argv)
 
+    # Configure Environment Variables
+    load_dotenv(args.env)
+
     # Configure Program Logger
     configure_logging(save_path="./logs", min_level=args.log, program_name="BLE_DEV")
     logger.info("Configured Program Logger")
-
-    # Configure Environment Variables
-    load_dotenv(args.env)
 
     try:
         selection = args.feature

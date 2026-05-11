@@ -1,6 +1,7 @@
 import asyncio
 import argparse
 import logging
+import os
 
 from .orchestrator import BLEMessenger
 
@@ -41,8 +42,12 @@ Examples:
         except EOFError:
             name = "Anonymous"
  
+    CHAT_SERV = os.getenv("CHAT_SVC")
+    CHAT_TX_CHAR = os.getenv("CHAT_TX_CHAR")
+    CHAT_RX_CHAR = os.getenv("CHAT_RX_CHAR")
+
     try:
-        asyncio.run(BLEMessenger(name).run())
+        asyncio.run(BLEMessenger(name, CHAT_SERV, CHAT_TX_CHAR, CHAT_RX_CHAR).run())
     except KeyboardInterrupt:
         pass
  

@@ -3,7 +3,7 @@ import asyncio
 from typing import Callable, Optional
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak import BleakClient
-from .constants import RX_CHAR, TX_CHAR, INTER_PKT_GAP
+from .constants import INTER_PKT_GAP
 
 class CentralNode:
     """
@@ -20,10 +20,14 @@ class CentralNode:
 
     def __init__(
         self,
+        tx_char_uuid: str,
+        rx_char_uuid: str,
         peer_address: str,
         on_raw: Callable[[bytes], None],
         on_disconnect: Callable[[], None]
     ):
+        self.tx_char_uuid = tx_char_uuid
+        self.rx_char_uuid = rx_char_uuid
         self._addr = peer_address
         self._on_raw = on_raw
         self._on_disconnect = on_disconnect
@@ -57,7 +61,7 @@ class CentralNode:
             if not self._connected:
                 continue
             try:
-                await self._client.write_gatt_char(RX_CHAR, pkt, response=False)
+                await self._client.write_gatt_char(self.rx_char_uuid, pkt, response=False)
                 await asyncio.sleep(INTER_PKT_GAP)
             except Exception:
                 pass
@@ -72,7 +76,7 @@ class CentralNode:
                 disconnected_callback=self._disconnect_handler
             )
             await self._client.connect()
-            await self._client.start_notify(TX_CHAR, self._notification_handler)
+            await self._client.start_notify(self.tx_char_uuid, self._notification_handler)
             self._connected = True
             asyncio.create_task(self._write_loop())
             return True
@@ -84,7 +88,7 @@ class CentralNode:
         self._connected = False
         if self._client and self._client.is_connected:
             try:
-                await self._client.stop_notify(TX_CHAR)
+                await self._client.stop_notify(self.tx_char_uuid)
                 await self._client.disconnect()
             except Exception:
                 pass

@@ -1,4 +1,4 @@
-from .constants import MAX_MSG_ID, CHAT_SERV
+from .constants import MAX_MSG_ID
 import time
 from dataclasses import dataclass
 from datetime import datetime
@@ -6,6 +6,7 @@ from typing import Optional
 from rich.console import Console
 from rich.text import Text
 from rich.rule import Rule
+import os
 
 @dataclass
 class ChatRecord:
@@ -51,7 +52,7 @@ class ChatUI:
         self.console.rule("[bold blue]◆  BLE Messenger[/bold blue]")
         self.console.print(
             f"  Name    : [bold]{self.my_name}[/bold]\n"
-            f"  Service : [dim]{CHAT_SERV}[/dim]"
+            f"  Service : [dim]{os.getenv("CHAT_SVC")}[/dim]"
         )
         self.console.print()
     

@@ -6,7 +6,7 @@ from bless import (
     GATTCharacteristicProperties as Props,
     GATTAttributePermissions as Perms,
 )
-from .constants import TX_CHAR, RX_CHAR, CHAT_SERV, INTER_PKT_GAP, DEVICE_NAME
+from .constants import INTER_PKT_GAP, DEVICE_NAME
 
 class PeripheralNode:
     """
@@ -25,9 +25,15 @@ class PeripheralNode:
 
     def __init__(
         self,
+        service_uuid: str,
+        tx_char_uuid: str,
+        rx_char_uuid: str,
         loop: asyncio.AbstractEventLoop,
         on_raw: Callable[[bytes], None],
     ):
+        self.service_uuid = service_uuid
+        self.tx_char_uuid = tx_char_uuid
+        self.rx_char_uuid = rx_char_uuid
         self._loop = loop
         self._on_raw = on_raw   # thread-safe, scheduled on loop
         self._server: Optional[BlessServer] = None
@@ -41,7 +47,7 @@ class PeripheralNode:
     
     def _write_handler(self, char: BlessChar, value: Any, **_):
         """Called by the BLE stack - may be a foreign thread; use call_soon_threadsafe."""
-        if char.uuid.lower() == RX_CHAR.lower():
+        if char.uuid.lower() == self.rx_char_uuid.lower():
             self._loop.call_soon_threadsafe(self._on_raw, bytes(value))
     
     # --- outbound ------------------------------------------------------------------
@@ -57,9 +63,9 @@ class PeripheralNode:
             except asyncio.TimeoutError:
                 continue
             try:
-                char = self._server.get_characteristic(TX_CHAR)
+                char = self._server.get_characteristic(self.tx_char_uuid)
                 char.value = bytearray(pkt)
-                self._server.update_value(CHAT_SERV, TX_CHAR)
+                self._server.update_value(self.service_uuid, self.tx_char_uuid)
                 await asyncio.sleep(INTER_PKT_GAP)
             except Exception:
                 pass    # silently skip if not yet connected / char unavailable
@@ -71,11 +77,11 @@ class PeripheralNode:
         self._server.read_request_func = self._read_handler
         self._server.write_request_func = self._write_handler
 
-        await self._server.add_new_service(CHAT_SERV)
+        await self._server.add_new_service(self.service_uuid)
 
         # TX: central subscribes and receives notifications from us
         await self._server.add_new_characteristic(
-            CHAT_SERV, TX_CHAR,
+            self.service_uuid, self.tx_char_uuid,
             Props.notify,
             None,
             Perms.readable
@@ -83,7 +89,7 @@ class PeripheralNode:
 
         # RX: central writes to us; support both write flavours for compatibility
         await self._server.add_new_characteristic(
-            CHAT_SERV, RX_CHAR,
+            self.service_uuid, self.rx_char_uuid,
             Props.write | Props.write_without_response,
             None,
             Perms.writeable
