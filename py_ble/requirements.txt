@@ -1,0 +1,12 @@
+-e git+ssh://git@github.com/Blu3Rey/crowdspace.git@89f20c0064f3a1adf714d3a1479edb5fc7a7ca73#egg=ble_dev&subdirectory=py_ble
+bleak==3.0.2
+bless==0.3.0
+dbus-fast==4.0.4
+dbus-next==0.2.3
+markdown-it-py==4.2.0
+mdurl==0.1.2
+prompt_toolkit==3.0.52
+Pygments==2.20.0
+python-dotenv==1.2.2
+rich==15.0.0
+wcwidth==0.7.0
