@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ble-network"
+version = "0.1.0"
+description = "Bluetooth mesh communication system"
+requires-python = ">=3.8"
+dependencies = [
+    "bleak>=0.21.1",        # BLE central role (scanning, connecting, writing to peers)
+    "bless>=0.2.6",         # BLE peripheral role (advertising, GATT server)
+    "cryptography>=42.0.0", # AES-GCM encryption + X25519 ECDH key exchange
+    "structlog>=24.0.0"    # structured logging
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "mypy>=1.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# [project.scripts]
+# ble-messenger = "features.ble_chat.main:main"

@@ -4,8 +4,8 @@ core/ble_manager.py
 Hardware abstraction layer for BLE operations.
 
 Uses:
-  • bleak  – Central/client role (scanning, connecting, writing)
-  • bless  – Peripheral/server role (advertising, GATT server)
+  • bleak  - Central/client role (scanning, connecting, writing)
+  • bless  - Peripheral/server role (advertising, GATT server)
 
 Each node simultaneously acts as:
   [Peripheral]  Advertises a GATT service, accepts writes → receive packets
@@ -22,6 +22,7 @@ from typing import Callable, Dict, List, Optional, Set, Awaitable
 
 from bleak import BleakScanner, BleakClient, BleakError
 from bleak.backends.device import BLEDevice
+from bleak.backends.scanner import AdvertisementData
 from bless import BlessServer, BlessGATTCharacteristic, GATTCharacteristicProperties, GATTAttributePermissions
 
 log = logging.getLogger(__name__)
@@ -199,26 +200,75 @@ class BLEManager:
 
     # ── Central (Scanner / Client) ────────────────────────────────────────────
 
+    # async def _scan_loop(self):
+    #     """Continuously scan for mesh peers and notify the application layer."""
+    #     while self._running:
+    #         try:
+    #             devices = await BleakScanner.discover(
+    #                 timeout        = SCAN_TIMEOUT,
+    #                 service_uuids  = [MESH_SERVICE_UUID],
+    #             )
+    #             for dev in devices:
+    #                 addr = self._parse_addr(dev.address)
+    #                 if addr == self._local_addr:
+    #                     continue
+    #                 rssi = dev.rssi or -100
+    #                 self._known_devs[dev.address.upper()] = dev
+    #                 await self._on_peer_detected(addr, dev.name or "", rssi)
+    #         except asyncio.CancelledError:
+    #             break
+    #         except Exception as e:
+    #             log.debug("[BLE] Scan error: %s", e)
+    #         await asyncio.sleep(1)
+
     async def _scan_loop(self):
-        """Continuously scan for mesh peers and notify the application layer."""
+        """Continuously scan for mesh eers and notify the application layer."""
+
+        def detect_cb(dev: BLEDevice, adv_data: AdvertisementData):
+            # 1. Filter by UUID
+            if MESH_SERVICE_UUID.lower() not in [u.lower() for u in adv_data.service_uuids]:
+                return
+            
+            addr = self._parse_addr(dev.address)
+            if addr == self._local_addr:
+                return
+            
+            # 2. Get RSSI
+            rssi = adv_data.rssi or -100
+            self._known_devs[dev.address.upper()] = dev
+
+            asyncio.create_task(self._on_peer_detected(addr, dev.name or "", rssi))
+        
         while self._running:
             try:
-                devices = await BleakScanner.discover(
-                    timeout        = SCAN_TIMEOUT,
-                    service_uuids  = [MESH_SERVICE_UUID],
-                )
-                for dev in devices:
-                    addr = self._parse_addr(dev.address)
-                    if addr == self._local_addr:
-                        continue
-                    rssi = dev.rssi or -100
-                    self._known_devs[dev.address.upper()] = dev
-                    await self._on_peer_detected(addr, dev.name or "", rssi)
+                async with BleakScanner(detection_callback=detect_cb):
+                    await asyncio.sleep(SCAN_TIMEOUT)
             except asyncio.CancelledError:
-                break
+                log.debug("[BLE] Scan loop cancelled")
             except Exception as e:
                 log.debug("[BLE] Scan error: %s", e)
-            await asyncio.sleep(1)
+                await asyncio.sleep(2)
+
+    # async def _scan_loop(self):
+    #     """Continuously scan for mesh peers and notify the application layer."""
+    #     while self._running:
+    #         try:
+    #             async def detect_cb(dev: BLEDevice, adv_data: AdvertisementData):
+    #                 if MESH_SERVICE_UUID.lower() not in [u.lower() for u in adv_data.service_uuids]:
+    #                     return
+    #                 addr = self._parse_addr(dev.address)
+    #                 if addr == self._local_addr:
+    #                     return
+    #                 rssi = adv_data.rssi or -100
+    #                 self._known_devs[dev.address.upper()] = dev
+    #                 await self._on_peer_detected(addr, dev.name or "", rssi)
+    #             async with BleakScanner(detection_callback=detect_cb):
+    #                 await asyncio.sleep(SCAN_TIMEOUT)
+    #         except asyncio.CancelledError:
+    #             log.debug("[BLE] Scan loop cancelled")
+    #         except Exception as e:
+    #             log.debug("[BLE] Scan error: %s", e)
+    #         await asyncio.sleep(1)
 
     async def _get_or_connect(self, addr_str: str) -> Optional[BleakClient]:
         """Return an existing client or establish a new connection."""

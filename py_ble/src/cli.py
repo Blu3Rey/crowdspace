@@ -176,7 +176,7 @@ class MeshCLI:
             rtt  = f"{p['rtt_ms']:.1f}ms" if p["rtt_ms"] < 1e9 else "?"
             alive = _c(C.GREEN, "●") if p["is_alive"] else _c(C.RED, "○")
             print(f"  {alive} {p['addr']:<20} {p['name']:<16} {p['hop_distance']:<6} "
-                  f"{p['rssi_avg']:<8.1f} {dist:<10} {rtt}")
+                  f"{p['smoothed_rssi']:<8.1f} {dist:<10} {rtt}")
         print()
 
     async def _cmd_routes(self, _):

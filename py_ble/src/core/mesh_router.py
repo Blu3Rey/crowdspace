@@ -4,12 +4,12 @@ core/mesh_router.py
 Multi-hop mesh routing engine.
 
 Strategy:
-  1. Flooding (default) – re-broadcast with TTL decrement; deduplication via
+  1. Flooding (default) - re-broadcast with TTL decrement; deduplication via
      seen-packet cache prevents loops.
-  2. Directed routing – when a route is known, send only toward the
+  2. Directed routing - when a route is known, send only toward the
      best next-hop to conserve airtime.
-  3. Reliability layer – optional ACK + retransmit for RELIABLE-flagged packets.
-  4. Route discovery – ROUTE_REQUEST / ROUTE_REPLY protocol to populate the
+  3. Reliability layer - optional ACK + retransmit for RELIABLE-flagged packets.
+  4. Route discovery - ROUTE_REQUEST / ROUTE_REPLY protocol to populate the
      routing table on demand.
 """
 
