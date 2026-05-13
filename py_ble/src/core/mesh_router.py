@@ -86,11 +86,11 @@ class MeshRouter:
     Core packet-forwarding engine.
 
     Responsibilities:
-      • receive(pkt, rssi) – process an incoming packet
-      • send(pkt)          – originate and route a packet
-      • forward(pkt)       – re-broadcast a packet one hop
-      • ACK / retransmit   – reliability for RELIABLE-flagged packets
-      • Route discovery    – RREQ / RREP protocol
+      • receive(pkt, rssi) - process an incoming packet
+      • send(pkt)          - originate and route a packet
+      • forward(pkt)       - re-broadcast a packet one hop
+      • ACK / retransmit   - reliability for RELIABLE-flagged packets
+      • Route discovery    - RREQ / RREP protocol
     """
 
     FLOOD_NEIGHBORS_LIMIT = 8    # max peers to flood to simultaneously
@@ -150,7 +150,7 @@ class MeshRouter:
         # 2. Decrypt if encrypted
         pkt = self._crypto.decrypt_packet(pkt, peer_addr=pkt.src_addr)
         if pkt is None:
-            log.debug("[Router] Decrypt failed – drop")
+            log.debug("[Router] Decrypt failed - drop")
             return
 
         # 3. Fragment reassembly
@@ -222,7 +222,7 @@ class MeshRouter:
                 if found:
                     await self._route_and_send(pkt)
                 else:
-                    log.warning("[Router] No route to %s – flooding as last resort",
+                    log.warning("[Router] No route to %s - flooding as last resort",
                                 ":".join(f"{b:02X}" for b in pkt.dst_addr))
                     await self._flood(pkt)
 

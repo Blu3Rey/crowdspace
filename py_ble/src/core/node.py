@@ -188,7 +188,7 @@ class RoutingTable:
 
     @staticmethod
     def _rssi_penalty(rssi: float) -> int:
-        """Convert RSSI to an additive routing penalty (0–5)."""
+        """Convert RSSI to an additive routing penalty (0-5)."""
         if rssi >= -60:   return 0
         if rssi >= -70:   return 1
         if rssi >= -80:   return 2

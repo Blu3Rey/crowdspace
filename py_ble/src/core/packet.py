@@ -22,7 +22,7 @@ from typing import Optional, List, Tuple
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
-MAGIC           = 0x4D42          # "BM" – Bluetooth Mesh
+MAGIC           = 0x4D42          # "BM" - Bluetooth Mesh
 PROTOCOL_VER    = 1
 BROADCAST_ADDR  = b"\xff" * 6    # FF:FF:FF:FF:FF:FF
 MAX_TTL         = 7

@@ -128,7 +128,7 @@ class MeshCLI:
 
     async def _cmd_help(self, _):
         print(f"""
-{_c(C.BOLD, "BLE Mesh Network – Commands")}
+{_c(C.BOLD, "BLE Mesh Network - Commands")}
 
   {_c(C.CYAN, "status")}                       Node info and statistics
   {_c(C.CYAN, "peers")}                        List all known peers

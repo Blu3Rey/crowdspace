@@ -112,7 +112,7 @@ class BLEManager:
         addr_str = self._addr_str(peer_addr)
         client   = await self._get_or_connect(addr_str)
         if client is None:
-            log.warning("[BLE] Cannot reach %s – no connection", addr_str)
+            log.warning("[BLE] Cannot reach %s - no connection", addr_str)
             return False
 
         try:
@@ -248,27 +248,6 @@ class BLEManager:
             except Exception as e:
                 log.debug("[BLE] Scan error: %s", e)
                 await asyncio.sleep(2)
-
-    # async def _scan_loop(self):
-    #     """Continuously scan for mesh peers and notify the application layer."""
-    #     while self._running:
-    #         try:
-    #             async def detect_cb(dev: BLEDevice, adv_data: AdvertisementData):
-    #                 if MESH_SERVICE_UUID.lower() not in [u.lower() for u in adv_data.service_uuids]:
-    #                     return
-    #                 addr = self._parse_addr(dev.address)
-    #                 if addr == self._local_addr:
-    #                     return
-    #                 rssi = adv_data.rssi or -100
-    #                 self._known_devs[dev.address.upper()] = dev
-    #                 await self._on_peer_detected(addr, dev.name or "", rssi)
-    #             async with BleakScanner(detection_callback=detect_cb):
-    #                 await asyncio.sleep(SCAN_TIMEOUT)
-    #         except asyncio.CancelledError:
-    #             log.debug("[BLE] Scan loop cancelled")
-    #         except Exception as e:
-    #             log.debug("[BLE] Scan error: %s", e)
-    #         await asyncio.sleep(1)
 
     async def _get_or_connect(self, addr_str: str) -> Optional[BleakClient]:
         """Return an existing client or establish a new connection."""

@@ -115,7 +115,7 @@ class GroupChatFeature(BaseFeature):
             payload  = payload,
             dst_addr = BROADCAST_ADDR,
             group_id = group_id,
-            flags    = PacketFlag.ENCRYPTED,
+            flags    = PacketFlag.NONE,
         )
         await self.send(pkt)
         self._log.info("Joined group %d (%s)", group_id, self._gname(group_id))
@@ -134,7 +134,7 @@ class GroupChatFeature(BaseFeature):
             payload  = payload,
             dst_addr = BROADCAST_ADDR,
             group_id = group_id,
-            flags    = PacketFlag.ENCRYPTED,
+            flags    = PacketFlag.NONE,
         )
         await self.send(pkt)
 
@@ -148,7 +148,7 @@ class GroupChatFeature(BaseFeature):
     ) -> Optional[GroupMessage]:
         """Send a text message to a group."""
         if group_id not in self._my_groups:
-            self._log.warning("Cannot send to group %d – not a member", group_id)
+            self._log.warning("Cannot send to group %d - not a member", group_id)
             return None
 
         gm = GroupMessage(
@@ -165,7 +165,7 @@ class GroupChatFeature(BaseFeature):
             payload  = payload,
             dst_addr = BROADCAST_ADDR,
             group_id = group_id,
-            flags    = PacketFlag.ENCRYPTED,
+            flags    = PacketFlag.NONE,
             ttl      = ttl,
         )
         await self.send(pkt)
@@ -187,12 +187,12 @@ class GroupChatFeature(BaseFeature):
             payload  = payload,
             dst_addr = peer_addr,
             group_id = group_id,
-            flags    = PacketFlag.ENCRYPTED,
+            flags    = PacketFlag.NONE,
         )
         await self.send(pkt)
 
     async def rename(self, group_id: int, new_name: str):
-        """Rename a group (admin operation – no enforcement, cooperative)."""
+        """Rename a group (admin operation - no enforcement, cooperative)."""
         group = self._registry.get(group_id)
         if group:
             group.name = new_name

@@ -131,7 +131,7 @@ class MessagingFeature(BaseFeature):
             meta     = meta or {},
         )
         payload = self._encode(msg, "text")
-        flags   = PacketFlag.ENCRYPTED
+        flags   = PacketFlag.NONE
         if reliable:
             flags |= PacketFlag.RELIABLE
 
@@ -181,7 +181,7 @@ class MessagingFeature(BaseFeature):
             PacketType.DIRECT_MSG,
             payload  = payload,
             dst_addr = dst_addr,
-            flags    = PacketFlag.ENCRYPTED,
+            flags    = PacketFlag.NONE,
             reliable = reliable,
         )
         await self.send(pkt)
@@ -202,7 +202,7 @@ class MessagingFeature(BaseFeature):
             PacketType.BROADCAST_MSG,
             payload  = payload,
             dst_addr = BROADCAST_ADDR,
-            flags    = PacketFlag.ENCRYPTED,
+            flags    = PacketFlag.NONE,
         )
         await self.send(pkt)
         self._store(msg)

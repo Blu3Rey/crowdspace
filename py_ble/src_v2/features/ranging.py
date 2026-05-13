@@ -93,7 +93,7 @@ def rssi_to_distance(rssi: float, tx_power: int = TX_POWER_DEFAULT, n: float = R
         d = 10 ^ ((tx_power - rssi) / (10 * n))
 
     tx_power: RSSI measured at exactly 1 m from the antenna (calibrate per device).
-    n:        path-loss exponent (2.0 = free space, 2.5–4.0 = indoor).
+    n:        path-loss exponent (2.0 = free space, 2.5-4.0 = indoor).
     """
     if rssi == 0:
         return -1.0

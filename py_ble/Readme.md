@@ -7,7 +7,7 @@ A highly modular, production-grade **Bluetooth Low Energy mesh networking** libr
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                        MeshNode                              │
-│  (orchestrator – owns all subsystems)                        │
+│  (orchestrator - owns all subsystems)                        │
 │                                                              │
 │  ┌─────────────┐  ┌──────────────┐  ┌────────────────────┐  │
 │  │ PacketFactory│  │  KeyManager  │  │  FeatureRegistry   │  │
@@ -220,7 +220,7 @@ The router uses a **hybrid** strategy:
 ```
 mesh> help
 
-BLE Mesh Network – Commands
+BLE Mesh Network - Commands
 
   status                        Node info and statistics
   peers                         List all known peers

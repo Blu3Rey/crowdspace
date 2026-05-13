@@ -1,6 +1,6 @@
-# core/__init__.py
-from core.packet      import Packet, PacketType, PacketFlag, PacketFactory, BROADCAST_ADDR
-from core.crypto      import KeyManager, generate_network_key
-from core.node        import PeerNode, RoutingTable, GroupRegistry
-from core.mesh_router import MeshRouter
-from .core.ble_manager import BLEManager
+# ble_mesh_network/__init__.py
+from .mesh_node import MeshNode, create_node
+from .core.crypto import generate_network_key
+ 
+__version__ = "1.0.0"
+__all__ = ["MeshNode", "create_node", "generate_network_key"]

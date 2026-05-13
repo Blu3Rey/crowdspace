@@ -175,13 +175,20 @@ class KeyManager:
         """
         return pkt.src_addr + struct.pack("<IBB", pkt.seq_num, pkt.frag_idx, 0)
 
+    # def _make_aad(self, pkt: Packet) -> bytes:
+    #     """Additional authenticated data covers routing fields."""
+    #     return (
+    #         bytes([int(pkt.ptype)])
+    #         + pkt.src_addr
+    #         + pkt.dst_addr
+    #         + struct.pack("<IIBB", pkt.group_id, pkt.seq_num, pkt.ttl, int(pkt.flags))
+    #     )
     def _make_aad(self, pkt: Packet) -> bytes:
-        """Additional authenticated data covers routing fields."""
         return (
             bytes([int(pkt.ptype)])
             + pkt.src_addr
             + pkt.dst_addr
-            + struct.pack("<IIBB", pkt.group_id, pkt.seq_num, pkt.ttl, int(pkt.flags))
+            + struct.pack("<II", pkt.group_id, pkt.seq_num)
         )
 
     def _is_replay(self, pkt: Packet) -> bool:

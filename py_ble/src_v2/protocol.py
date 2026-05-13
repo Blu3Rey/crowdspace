@@ -12,7 +12,7 @@ Enhanced header vs. the original 4-byte format:
                  flag bit 3  reserved
         [1]  feature_id    FeatureID enum — routes to the right FeatureBase handler
         [2]  msg_type      uint8, meaning defined by each feature
-        [3]  msg_id        uint8, 0–255, wraps; scoped per (feature, peer)
+        [3]  msg_id        uint8, 0-255, wraps; scoped per (feature, peer)
         [4]  chunk_idx     uint8
         [5]  n_chunks      uint8
  
@@ -27,7 +27,7 @@ Enhanced header vs. the original 4-byte format:
     Payload: remaining bytes (up to CHUNK_SIZE)
  
 Why not TLV / protobuf?
-    BLE packets are tiny (typ. 20–512 bytes).  A fixed-position optional-block
+    BLE packets are tiny (typ. 20-512 bytes).  A fixed-position optional-block
     scheme costs 0 bytes when unused and avoids a parser loop on the critical
     path.  Adding new extension blocks (HAS_TIMESTAMP, HAS_SIGNATURE …) is a
     one-bit flag away.

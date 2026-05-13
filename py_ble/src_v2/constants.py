@@ -50,7 +50,7 @@ IS_WINDOWS = _platform.system() == "Windows"
 # macOS / Core Bluetooth:
 #   response=False (ATT Write Command) is fully supported and ~3× faster
 #   because there is no per-chunk acknowledgment round-trip.  The connection
-#   interval is typically 15–45 ms; eliminating the Write Response halves
+#   interval is typically 15-45 ms; eliminating the Write Response halves
 #   the effective per-chunk latency.
 #
 # Windows / WinRT:
