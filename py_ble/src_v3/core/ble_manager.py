@@ -222,7 +222,7 @@ class BLEManager:
     #         await asyncio.sleep(1)
 
     async def _scan_loop(self):
-        """Continuously scan for mesh eers and notify the application layer."""
+        """Continuously scan for mesh peers and notify the application layer."""
 
         def detect_cb(dev: BLEDevice, adv_data: AdvertisementData):
             # 1. Filter by UUID

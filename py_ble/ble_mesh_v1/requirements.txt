@@ -1,0 +1,16 @@
+# BLE Mesh Network — Python Dependencies
+# =======================================
+#
+# Core (required)
+# ---------------
+bleak>=0.21.0          # BLE central role — scan, connect, notify, write
+bless>=0.2.5           # BLE peripheral role — GATT server, advertise, notify
+#
+# Security (optional — needed when enable_encryption=True)
+# ---------------------------------------------------------
+cryptography>=41.0.0   # AES-256-GCM encryption + PBKDF2 key derivation
+#
+# Development / testing (optional)
+# ---------------------------------
+# pytest>=7.0
+# pytest-asyncio>=0.23
