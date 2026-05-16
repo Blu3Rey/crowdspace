@@ -13,7 +13,7 @@ Commands
   grp  send  <group> <text>      — Send a group message
   loc  [node_id_prefix]          — Locate devices (RSSI)
   nb                             — List neighbours
-  rt                             — Print routing table
+  rt                             — Print routing table (primary + backup routes)
   st                             — Node status
   help                           — Show this help
   quit                           — Stop and exit
@@ -143,15 +143,17 @@ async def repl(node: MeshNode, messaging: DirectMessaging, chat: GroupChat, loca
 
             # ── Routing table ─────────────────────────────────────────────────
             elif cmd in ("rt", "routes"):
-                routes = node.router.all_routes()
-                if not routes:
+                all_with_backups = node.router.all_routes_with_backups()
+                if not all_with_backups:
                     print("  Routing table empty.")
                 else:
-                    print(f"  {'DESTINATION':>12}  {'NEXT HOP':>12}  {'HOPS':>5}  {'RSSI':>6}  {'METRIC':>7}")
-                    print("  " + "-" * 50)
-                    for r in routes:
-                        print(f"  {r.dst_id.hex()[:10]}  {r.next_hop_id.hex()[:10]}  "
-                              f"{r.hop_count:>5}  {r.rssi:>6} dBm  {r.metric:>7.2f}")
+                    print(f"  {'DESTINATION':>12}  {'NEXT HOP':>12}  {'HOPS':>5}  {'RSSI':>6}  {'METRIC':>7}  {'ROLE':>7}")
+                    print("  " + "-" * 62)
+                    for dst, entries in all_with_backups.items():
+                        for i, r in enumerate(entries):
+                            role = "primary" if i == 0 else "backup"
+                            print(f"  {r.dst_id.hex()[:10]}  {r.next_hop_id.hex()[:10]}  "
+                                  f"{r.hop_count:>5}  {r.rssi:>6} dBm  {r.metric:>7.2f}  {role:>7}")
 
             # ── Status ────────────────────────────────────────────────────────
             elif cmd in ("st", "status"):
@@ -186,11 +188,13 @@ async def main(args: argparse.Namespace) -> None:
         node_name=args.name,
         power_profile=args.profile,
         enable_encryption=args.encrypt,
+        passive_scan=args.passive_scan,
         psk=(args.psk.encode() * 4)[:32] if args.psk else None,
     )
 
     print(f"  Node ID : {cfg.node_id.hex()}")
     print(f"  Profile : {cfg.power_profile}")
+    print(f"  Scan    : {'passive' if cfg.passive_scan else 'active'}")
     print(f"  Encrypt : {cfg.enable_encryption}")
     if cfg.enable_encryption:
         print(f"  PSK     : {cfg.psk.hex() if cfg.psk else 'auto-generated'}")
@@ -227,6 +231,9 @@ def cli_entry() -> None:
     parser.add_argument("--profile",   default="balanced",
                         choices=["low_power", "balanced", "high_performance"],
                         help="Power / scan profile")
+    parser.add_argument("--passive-scan", action="store_true",
+                        help="Use passive BLE scanning (saves battery; "
+                             "recommended for low_power profile)")
     parser.add_argument("--encrypt",   action="store_true", help="Enable AES-256-GCM encryption")
     parser.add_argument("--psk",       default=None,        help="Pre-shared key (ASCII, padded to 32B)")
     parser.add_argument("--join",      nargs="*", default=[], metavar="GROUP",

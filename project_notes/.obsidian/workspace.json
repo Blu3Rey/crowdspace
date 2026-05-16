@@ -4,17 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "b22155390aa7334a",
+        "id": "5a41dbf236d26e71",
         "type": "tabs",
         "children": [
           {
-            "id": "afafbd5664c5b787",
+            "id": "f1213321bd0f0c8f",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "CrowdSpace Mission.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "CrowdSpace Mission"
             }
           }
         ]
@@ -74,8 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "ff6015221147b131",
@@ -179,8 +182,9 @@
       "bases:Create new base": false
     }
   },
-  "active": "afafbd5664c5b787",
+  "active": "f315134e6a094849",
   "lastOpenFiles": [
+    "CrowdSpace Mission.md",
     "Bluetooth Low Energy/BLE Central Implementations.md",
     "Bluetooth Low Energy/BLE Overview.md",
     "Bluetooth Low Energy/BLE Peripheral Implementations.md",

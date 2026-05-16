@@ -1,1 +1,0 @@
-* Implement Bluetooth Low-Energy(BLE) with: https://www.npmjs.com/package/expo-bitchat

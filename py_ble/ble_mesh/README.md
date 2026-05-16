@@ -49,11 +49,28 @@ Offset  Size  Field
      3     1  flags        ACK_REQ | ENCRYPTED | FRAGMENTED | COMPRESSED | RELIABLE
      4    16  src_id       source node UUID (128-bit)
     20    16  dst_id       destination UUID (0xFF×16 = broadcast)
-    36     4  seq_num      per-source uint32 sequence number
+    36     4  seq_num      per-source uint32 sequence counter
     40     2  payload_len  payload byte count
     42     2  checksum     CRC-16/CCITT-FALSE over bytes[0:42] + payload
     44     N  payload      application data
 ```
+
+**Fragment sub-header** (inside payload of `FRAGMENT` packets, 5 bytes):
+
+```
+frag_id(2B) + total_frags(1B) + frag_index(1B) + orig_msg_type(1B)
+```
+
+The `orig_msg_type` byte records the original message type so the reassembled packet is dispatched to the correct feature handler — not hardcoded to `DIRECT_MSG`.
+
+### Routing
+
+The routing layer uses **TTL-bounded flooding with a routing-table overlay**:
+
+- **Dedup cache** — an LRU window of `(src_id, seq_num)` pairs prevents re-processing or re-forwarding the same packet. A per-source **high-water mark** additionally rejects any packet whose `seq_num` is behind the running maximum for that source (accounting for 32-bit wrap-around), closing the replay window that exists once entries are evicted from the LRU cache.
+- **Routing table** — stores up to **two routes per destination** (primary + hot-standby backup). Updates from the same next-hop always replace the existing entry — including degradations — so link quality changes are tracked in real time. If the primary route expires, `lookup()` transparently falls through to the backup without waiting for the table to rebuild.
+- **Forward jitter** — before re-broadcasting a received packet, each node waits a random 5–50 ms. This staggers simultaneous retransmissions from multiple receivers, significantly reducing collision-induced packet loss in dense meshes.
+- **Heartbeat TTL** — heartbeat and discovery packets are sent with `ttl=1`. They are only needed for direct-neighbour awareness, so they are never forwarded across the mesh, eliminating O(N × TTL) heartbeat floods.
 
 ---
 
@@ -270,17 +287,25 @@ node.register_feature(sensor)
 | `balanced` | 8 s | 4 s | 30 s |
 | `high_performance` | 3 s | 8 s | 10 s |
 
+All profiles benefit from `passive_scan=True`, which disables BLE scan-request packets and cuts radio-on power draw by ~60–70 % at the cost of slightly reduced advertisement detection on some peripherals. Recommended for battery-constrained nodes:
+
+```python
+cfg = MeshConfig(power_profile="low_power", passive_scan=True)
+# or from the CLI:
+# python -m ble_mesh.cli --profile low_power --passive-scan
+```
+
+Heartbeat packets are always sent with `ttl=1` regardless of profile — they are direct-neighbour keepalives and serve no purpose beyond one hop.
+
 ---
 
 ## Security
 
-- **Encryption**: AES-256-GCM via a 32-byte pre-shared key (PSK).
-  All payload bytes are encrypted; the header (src/dst/seq) is authenticated
-  as Additional Authenticated Data (AAD) to detect tampering.
-- **Integrity**: Every packet is CRC-16/CCITT-FALSE protected regardless of
-  encryption status.
-- **Key distribution**: out of scope — use an out-of-band channel
-  (QR code, NFC tap, provisioning app) or ECDH key agreement.
+- **Encryption**: AES-256-GCM via a 32-byte pre-shared key (PSK). All payload bytes are encrypted; the header (src/dst/seq) is authenticated as Additional Authenticated Data (AAD) to detect tampering.
+- **Nonces**: Counter-based (`node_id[:4] + uint64_counter`), not random. This eliminates birthday-bound nonce collision risk — two nodes sharing the same PSK will never produce the same (key, nonce) pair as long as they have distinct node IDs.
+- **Replay protection**: Every node tracks a per-source sequence number high-water mark. Packets with a `seq_num` behind the running maximum for that source are dropped even after the LRU dedup window has evicted them. 32-bit wrap-around is handled correctly.
+- **Integrity**: Every packet carries a CRC-16/CCITT-FALSE checksum regardless of encryption status.
+- **Key distribution**: Out of scope — use an out-of-band channel (QR code, NFC tap, provisioning app) or ECDH key agreement. The current PSK model is network-wide: a compromised node can decrypt all traffic. Per-node or per-group keys require a key-management layer not included here.
 
 ---
 
