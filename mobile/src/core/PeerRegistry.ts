@@ -4,20 +4,27 @@
  * Central in-memory store for all discovered and connected peers.
  *
  * Responsibilities:
- *  • Upsert peers as they are discovered via BLE scan or Multipeer.
- *  • Track connection state transitions.
- *  • Maintain a rolling RSSI window and derived distance estimates.
- *  • Expire stale peers (not seen recently).
- *  • Emit EventBus events on peer state changes.
+ *  - Upsert peers as they are discovered via BLE scan or Multipeer.
+ *  - Track connection state transitions.
+ *  - Maintain a rolling RSSI window and derived distance estimates.
+ *  - Expire stale peers (not seen recently).
+ *  - Emit EventBus events on peer state changes.
+ *
+ * FIX: O(1) reverse-lookup indices.
+ * getByBleDeviceId() and getByMultipeerPeerId() are called on every RSSI
+ * update, disconnection, and inbound frame — i.e. constantly. Both were O(n)
+ * linear scans over all peers. Two reverse-lookup Maps (bleDeviceId -> peerId,
+ * multipeerPeerId -> peerId) make them O(1) at the cost of a few extra map
+ * writes on upsert.
  */
 
 import {
+  RSSI_SAMPLE_COUNT,
+  RSSI_AT_1M,
   PATH_LOSS_EXPONENT,
   PEER_STALE_TIMEOUT_MS,
-  RSSI_AT_1M,
-  RSSI_SAMPLE_COUNT,
 } from '../constants/ble'
-import type { Peer, PeerCapability, PeerConnectionState } from '../types/ble'
+import type { Peer, PeerConnectionState, Transport, PeerCapability } from '../types/ble'
 import type { EventBus } from './EventBus'
 
 export class PeerRegistry {
@@ -26,11 +33,16 @@ export class PeerRegistry {
   private rssiWindows = new Map<string, number[]>()
   private staleTimer: ReturnType<typeof setInterval> | null = null
 
+  // FIX: Reverse-lookup indices for O(1) access by transport-layer IDs.
+  // Maintained in sync with the peers map on every upsert and eviction.
+  private bleDeviceIdIndex    = new Map<string, string>() // bleDeviceId    -> peerId
+  private multipeerIdIndex    = new Map<string, string>() // multipeerPeerId -> peerId
+
   constructor(bus: EventBus) {
     this.bus = bus
   }
 
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
+  // -- Lifecycle --------------------------------------------------------------
 
   start(): void {
     this.staleTimer = setInterval(() => this.evictStale(), 15_000)
@@ -40,13 +52,15 @@ export class PeerRegistry {
     if (this.staleTimer) clearInterval(this.staleTimer)
     this.peers.clear()
     this.rssiWindows.clear()
+    this.bleDeviceIdIndex.clear()
+    this.multipeerIdIndex.clear()
   }
 
-  // ── Upsert / Update ───────────────────────────────────────────────────────
+  // -- Upsert / Update --------------------------------------------------------
 
   /**
    * Upsert a peer from a BLE scan result.
-   * `bleDeviceId` is the platform-opaque device ID from munim-bluetooth.
+   * bleDeviceId is the platform-opaque device identifier from munim-bluetooth.
    */
   upsertFromScan(params: {
     peerId: string
@@ -57,6 +71,12 @@ export class PeerRegistry {
   }): Peer {
     const existing = this.peers.get(params.peerId)
     const isNew = !existing
+
+    // FIX: If this peer had a different bleDeviceId before (e.g. device
+    // re-paired), clean up the stale index entry to prevent a ghost key.
+    if (existing?.bleDeviceId && existing.bleDeviceId !== params.bleDeviceId) {
+      this.bleDeviceIdIndex.delete(existing.bleDeviceId)
+    }
 
     const peer: Peer = {
       id: params.peerId,
@@ -74,13 +94,13 @@ export class PeerRegistry {
     }
 
     this.peers.set(params.peerId, peer)
+    this.bleDeviceIdIndex.set(params.bleDeviceId, params.peerId)
 
     if (isNew) {
       this.bus.emit('peer:discovered', peer)
     } else {
       this.bus.emit('peer:updated', peer)
     }
-
     return peer
   }
 
@@ -95,6 +115,11 @@ export class PeerRegistry {
   }): Peer {
     const existing = this.peers.get(params.peerId)
     const isNew = !existing
+
+    // FIX: Remove stale multipeer index entry if the multipeer ID changed.
+    if (existing?.multipeerPeerId && existing.multipeerPeerId !== params.multipeerPeerId) {
+      this.multipeerIdIndex.delete(existing.multipeerPeerId)
+    }
 
     const peer: Peer = {
       id: params.peerId,
@@ -112,6 +137,8 @@ export class PeerRegistry {
     }
 
     this.peers.set(params.peerId, peer)
+    this.multipeerIdIndex.set(params.multipeerPeerId, params.peerId)
+
     if (isNew) {
       this.bus.emit('peer:discovered', peer)
     } else {
@@ -120,7 +147,7 @@ export class PeerRegistry {
     return peer
   }
 
-  // ── State Transitions ─────────────────────────────────────────────────────
+  // -- State Transitions ------------------------------------------------------
 
   setConnectionState(peerId: string, state: PeerConnectionState): void {
     const peer = this.peers.get(peerId)
@@ -153,7 +180,7 @@ export class PeerRegistry {
     this.bus.emit('peer:updated', updated)
   }
 
-  // ── RSSI ──────────────────────────────────────────────────────────────────
+  // -- RSSI -------------------------------------------------------------------
 
   updateRssi(peerId: string, rssi: number): void {
     const peer = this.peers.get(peerId)
@@ -186,24 +213,22 @@ export class PeerRegistry {
     return Math.pow(10, (RSSI_AT_1M - rssi) / (10 * PATH_LOSS_EXPONENT))
   }
 
-  // ── Queries ───────────────────────────────────────────────────────────────
+  // -- Queries ----------------------------------------------------------------
 
   get(peerId: string): Peer | undefined {
     return this.peers.get(peerId)
   }
 
+  /** O(1) lookup via reverse index. */
   getByBleDeviceId(bleId: string): Peer | undefined {
-    for (const peer of this.peers.values()) {
-      if (peer.bleDeviceId === bleId) return peer
-    }
-    return undefined
+    const peerId = this.bleDeviceIdIndex.get(bleId)
+    return peerId ? this.peers.get(peerId) : undefined
   }
 
+  /** O(1) lookup via reverse index. */
   getByMultipeerPeerId(mpId: string): Peer | undefined {
-    for (const peer of this.peers.values()) {
-      if (peer.multipeerPeerId === mpId) return peer
-    }
-    return undefined
+    const peerId = this.multipeerIdIndex.get(mpId)
+    return peerId ? this.peers.get(peerId) : undefined
   }
 
   getAll(): Peer[] {
@@ -220,7 +245,7 @@ export class PeerRegistry {
     return this.getAll().filter((p) => p.connectionState !== 'unreachable')
   }
 
-  // ── Stale Eviction ────────────────────────────────────────────────────────
+  // -- Stale Eviction ---------------------------------------------------------
 
   private evictStale(): void {
     const cutoff = Date.now() - PEER_STALE_TIMEOUT_MS
@@ -232,6 +257,9 @@ export class PeerRegistry {
       ) {
         this.peers.delete(id)
         this.rssiWindows.delete(id)
+        // FIX: Clean up reverse-index entries for evicted peers.
+        if (peer.bleDeviceId)    this.bleDeviceIdIndex.delete(peer.bleDeviceId)
+        if (peer.multipeerPeerId) this.multipeerIdIndex.delete(peer.multipeerPeerId)
         this.bus.emit('peer:lost', peer)
       }
     }

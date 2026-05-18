@@ -9,12 +9,12 @@
  * are automatically degraded to 'offline'.
  */
 
-import { PRESENCE_HEARTBEAT_MS, PRESENCE_TTL_MS } from '../constants/ble'
-import type { EventBus } from '../core/EventBus'
-import type { PeerRegistry } from '../core/PeerRegistry'
-import type { TransportManager } from '../core/TransportManager'
-import type { PresenceMessage, PresenceStatus } from '../types/ble'
 import { generateUUID } from '../utils/uuid'
+import { PRESENCE_HEARTBEAT_MS, PRESENCE_TTL_MS } from '../constants/ble'
+import type { TransportManager } from '../core/TransportManager'
+import type { PeerRegistry } from '../core/PeerRegistry'
+import type { EventBus } from '../core/EventBus'
+import type { PresenceStatus, PresenceMessage } from '../types/ble'
 
 export class Presence {
   private transport: TransportManager
@@ -98,14 +98,16 @@ export class Presence {
       transport: 'ble-gatt',
     }
     try {
-      const hexFrames = (this.transport as any).protocol?.encode?.(msg, this.selfId)
-      // Presence is broadcast to all — use notify path (peripheral pushes to subscribed centrals)
-      // as well as sending directly to connected peers.
-      await (this.transport as any).broadcast(
-        // Re-encode via TransportManager's internal method if available,
-        // otherwise fall through to send().
-        hexFrames ?? []
-      )
+      // FIX: Previously used (this.transport as any).protocol?.encode?.() and
+      // (this.transport as any).broadcast() — accessing private internals via
+      // type-cast. When protocol was undefined the optional chain silently
+      // returned undefined, broadcast([]) was called with an empty array, and
+      // every heartbeat was a no-op with no error thrown.
+      //
+      // broadcastMessage() is the correct public API: it encodes the message,
+      // pushes frames via notifyAll() to all subscribed BLE centrals (no new
+      // connections needed), and fans out via Multipeer for iOS peers.
+      await this.transport.broadcastMessage(msg)
     } catch {
       // best-effort; presence is non-critical
     }

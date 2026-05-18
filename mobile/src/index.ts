@@ -16,7 +16,7 @@ export { setAsyncStorage } from './store/MessageStore'
 export {
     useDeviceLocator, useDirectMessage,
     useGroupChat, useMeshNetwork, usePresence
-} from './hooks/hooks'
+} from './hooks'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export type {
@@ -44,7 +44,7 @@ export type { RangeResult } from './features/DeviceLocator'
 export type {
     UseDeviceLocatorResult, UseDMResult,
     UseGroupChatResult, UseMeshNetworkResult, UsePresenceResult
-} from './hooks/hooks'
+} from './hooks'
 
 // ── Constants (opt-in) ────────────────────────────────────────────────────────
 export {
