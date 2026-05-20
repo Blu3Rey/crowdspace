@@ -345,6 +345,28 @@ export class TransportManager {
     ) {
       return
     }
+
+    // FIX: Suppress redundant provisional entries for already-resolved devices.
+    //
+    // On Android every scan result uses the BLE MAC address as device.id.
+    // Android 10+ randomises the advertising MAC periodically (RPA), so the
+    // same physical device can appear with a different MAC on each scan cycle.
+    //
+    // Before peer identity is established we register a provisional entry
+    // keyed by the MAC. Once we connect and read PEER_INFO_CHAR we learn the
+    // stable UUID and switch to that — but without this guard, the next scan
+    // cycle with the same MAC creates a fresh provisional and the resolved
+    // device shows up twice in the peer list.
+    //
+    // If bleDeviceIdIndex already maps device.id to a stable peer (one whose
+    // id differs from its bleDeviceId), just refresh that peer's RSSI and
+    // lastSeen rather than creating a duplicate provisional entry.
+    const known = this.registry.getByBleDeviceId(device.id)
+    if (known && known.id !== device.id) {
+      if (device.rssi != null) this.registry.updateRssi(known.id, device.rssi)
+      return
+    }
+
     this.registry.upsertFromScan({
       peerId:       device.id,
       displayName:  device.localName ?? device.name ?? device.id,
@@ -355,8 +377,18 @@ export class TransportManager {
   }
 
   private handlePeerInfoRead(info: PeerInfoPayload, bleDeviceId: string): void {
+    // Look up whatever entry currently owns this bleDeviceId. On the first
+    // connection to a device this is the provisional MAC-keyed entry we
+    // created in handleScanResult. On subsequent reconnects (same MAC) it is
+    // already the stable UUID entry.
     const provisional = this.registry.getByBleDeviceId(bleDeviceId)
+    const provisionalId = provisional?.id  // capture before registry mutates
+
     if (provisional && provisional.id !== info.id) {
+      // Case A: Provisional entry exists and its ID differs from the stable
+      // UUID we just read. Upsert the stable entry FIRST (this updates the
+      // bleDeviceId index to point to info.id), THEN delete the provisional.
+      // Doing it in this order means the index is never left dangling.
       this.registry.upsertFromScan({
         peerId:       info.id,
         displayName:  info.name,
@@ -364,12 +396,19 @@ export class TransportManager {
         rssi:         provisional.rssi,
         capabilities: info.caps,
       })
+      // FIX: Remove the now-superseded provisional entry. The registry's
+      // deletePeer() guards against removing the index entry that was just
+      // updated to point at info.id, so the stable peer remains findable.
+      if (provisionalId) this.registry.deletePeer(provisionalId)
     } else {
+      // Case B: Either no provisional exists, or the existing entry already
+      // carries the stable ID (re-connection after MAC rotation where the
+      // new MAC produced a different provisional that was already resolved).
       this.registry.upsertFromScan({
         peerId:       info.id,
         displayName:  info.name,
         bleDeviceId,
-        rssi:         null,
+        rssi:         provisional?.rssi ?? null,
         capabilities: info.caps,
       })
     }

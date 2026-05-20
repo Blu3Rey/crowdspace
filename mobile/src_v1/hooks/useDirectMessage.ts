@@ -5,6 +5,7 @@ import type {
   PresenceStatus,
   StoredMessage,
 } from '../types/ble'
+import { PEER_STALE_TIMEOUT_MS } from '@/constants/ble'
 
 // DM send/receive for a specific conversation
 export interface UseDMResult {
@@ -41,9 +42,14 @@ export function useDirectMessage(
     setMessages(engine.dm.getConversation(peerId))
     setUnreadCount(engine.store.getUnreadCount(peerId))
     const peer = engine.getPeer(peerId)
+    // setPeerReachable(
+    //   peer?.connectionState === 'connected' || peer?.connectionState === 'subscribed',
+    // )
     setPeerReachable(
-      peer?.connectionState === 'connected' || peer?.connectionState === 'subscribed',
-    )
+      peer != null &&
+      peer.connectionState !== 'unreachable' &&
+      Date.now() - peer.lastSeen < PEER_STALE_TIMEOUT_MS,
+    );
     setPeerPresence(peer?.presenceStatus ?? 'offline')
   }, [engine, peerId])
 

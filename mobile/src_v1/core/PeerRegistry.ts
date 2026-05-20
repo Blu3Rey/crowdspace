@@ -245,6 +245,38 @@ export class PeerRegistry {
     return this.getAll().filter((p) => p.connectionState !== 'unreachable')
   }
 
+  // -- Explicit Deletion -----------------------------------------------------
+
+  /**
+   * Remove a peer from the registry and clean up all associated index entries
+   * and RSSI windows. Used by TransportManager to evict provisional (MAC-based)
+   * entries after the stable peer UUID has been established via PEER_INFO read.
+   *
+   * Index entries are only removed if they still point to this peerId — if
+   * they have already been updated to reference the incoming stable peer, they
+   * are left untouched.
+   */
+  deletePeer(peerId: string): void {
+    const peer = this.peers.get(peerId)
+    if (!peer) return
+
+    this.peers.delete(peerId)
+    this.rssiWindows.delete(peerId)
+
+    // Guard: only evict index entries that still point to this peer.
+    // upsertFromScan() for the stable peer runs before deletePeer() is called,
+    // so the index will already point to the stable peerId by the time we get
+    // here — meaning we must NOT delete it.
+    if (peer.bleDeviceId && this.bleDeviceIdIndex.get(peer.bleDeviceId) === peerId) {
+      this.bleDeviceIdIndex.delete(peer.bleDeviceId)
+    }
+    if (peer.multipeerPeerId && this.multipeerIdIndex.get(peer.multipeerPeerId) === peerId) {
+      this.multipeerIdIndex.delete(peer.multipeerPeerId)
+    }
+
+    this.bus.emit('peer:lost', peer)
+  }
+
   // -- Stale Eviction ---------------------------------------------------------
 
   private evictStale(): void {

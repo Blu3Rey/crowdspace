@@ -51,7 +51,7 @@ export const MAX_CHUNK_BYTES = 180
 export const MAX_FRAGMENTS = 64
 
 /** Interval between RSSI polls on a connected device (ms). */
-export const RSSI_POLL_INTERVAL_MS = 3_000
+export const RSSI_POLL_INTERVAL_MS = 1_500
 
 /** Number of RSSI samples used for smoothing in device locator. */
 export const RSSI_SAMPLE_COUNT = 8
@@ -74,20 +74,6 @@ export const FRAGMENT_REASSEMBLY_TIMEOUT_MS = 30_000
 
 /** Delay between consecutive reconnect attempts (ms). */
 export const RECONNECT_BASE_DELAY_MS = 800
-
-/** Hard ceiling on exponential back-off delay to prevent unbounded waits. */
-export const MAX_RECONNECT_DELAY_MS = 30_000
-
-/** Maximum simultaneous outbound GATT connections during group fan-out.
- * Most BLE stacks cap concurrent connections at 7–8; staying at 4 leaves
- * headroom for incoming central connections from peers. */
-export const MAX_BLE_CONCURRENT_SENDS = 4
-
-/** Pause between fan-out batches to let the BLE radio recover (ms). */
-export const BATCH_SEND_DELAY_MS = 120
-
-/** LRU cache size for inbound message-ID deduplication. */
-export const SEEN_MESSAGE_CACHE_SIZE = 256
 
 /** Max reconnect attempts before marking a peer as unreachable. */
 export const MAX_RECONNECT_ATTEMPTS = 4
